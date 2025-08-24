@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <AssemblyName>PingMonitor</AssemblyName>
+    <RootNamespace>PingMonitor</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- No additional packages needed - using built-in WinForms -->
+  </ItemGroup>
+
+</Project>
