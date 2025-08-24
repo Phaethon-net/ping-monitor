@@ -24,14 +24,26 @@ A lightweight Windows application that monitors network connectivity by pinging 
 
 ## Building
 
-To build the project:
+To build the project for development:
 
 ```bash
-dotnet build --configuration Release --self-contained true --runtime win-x64
+dotnet build --configuration Release
 ```
 
-To create a single executable file:
+## Creating Distribution Executable
+
+To create a single, self-contained executable for distribution:
 
 ```bash
-dotnet publish --configuration Release --self-contained true --runtime win-x64 /p:PublishSingleFile=true
+dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
 ```
+
+The executable will be created at: `bin\Release\net5.0-windows\win-x64\publish\PingMonitor.exe`
+
+### Distribution Features
+
+- **Single file**: No installation required, just run the .exe
+- **Self-contained**: Includes all .NET runtime dependencies
+- **Optimized**: Trimmed for smaller file size (~135MB)
+- **No dependencies**: Runs on Windows without requiring .NET installation
+- **Portable**: Copy the .exe file anywhere and run it

@@ -22,6 +22,7 @@ namespace PingMonitor
         private Label downtimeLabel;
         private Label lastCheckLabel;
         private Button startStopButton;
+        private NumericUpDown intervalSpinner;
         private bool isMonitoring = false;
         private string settingsFilePath;
 
@@ -40,11 +41,21 @@ namespace PingMonitor
                 
                 if (File.Exists(settingsFilePath))
                 {
-                    string savedHost = File.ReadAllText(settingsFilePath).Trim();
-                    if (!string.IsNullOrEmpty(savedHost))
+                    string[] lines = File.ReadAllLines(settingsFilePath);
+                    if (lines.Length > 0 && !string.IsNullOrEmpty(lines[0].Trim()))
                     {
-                        targetHost = savedHost;
+                        targetHost = lines[0].Trim();
                         hostTextBox.Text = targetHost;
+                    }
+                    
+                    // Load interval setting (default to 10 if not found or invalid)
+                    if (lines.Length > 1 && int.TryParse(lines[1].Trim(), out int savedInterval))
+                    {
+                        if (savedInterval >= 1 && savedInterval <= 100)
+                        {
+                            intervalSpinner.Value = savedInterval;
+                            pingTimer.Interval = savedInterval * 1000;
+                        }
                     }
                 }
             }
@@ -64,7 +75,13 @@ namespace PingMonitor
                     Directory.CreateDirectory(directory);
                 }
                 
-                File.WriteAllText(settingsFilePath, targetHost);
+                string[] settings = new string[]
+                {
+                    targetHost,
+                    intervalSpinner.Value.ToString()
+                };
+                
+                File.WriteAllLines(settingsFilePath, settings);
             }
             catch
             {
@@ -97,11 +114,31 @@ namespace PingMonitor
             };
             this.Controls.Add(hostTextBox);
 
+            // Interval spinner
+            var intervalLabel = new Label
+            {
+                Text = "Interval (sec):",
+                Location = new Point(330, 15),
+                Size = new Size(80, 20)
+            };
+            this.Controls.Add(intervalLabel);
+
+            intervalSpinner = new NumericUpDown
+            {
+                Minimum = 1,
+                Maximum = 100,
+                Value = 10, // Default 10 seconds
+                Location = new Point(415, 12),
+                Size = new Size(60, 25)
+            };
+            intervalSpinner.ValueChanged += IntervalSpinner_ValueChanged;
+            this.Controls.Add(intervalSpinner);
+
             // Start/Stop button
             startStopButton = new Button
             {
                 Text = "Start Monitoring",
-                Location = new Point(330, 10),
+                Location = new Point(485, 10),
                 Size = new Size(120, 30),
                 BackColor = Color.LightGreen
             };
@@ -148,9 +185,20 @@ namespace PingMonitor
             // Timer
             pingTimer = new Timer
             {
-                Interval = 10000 // 10 seconds
+                Interval = 10000 // Default 10 seconds, will be updated by spinner
             };
             pingTimer.Tick += async (s, e) => await PingHost();
+        }
+
+        private void IntervalSpinner_ValueChanged(object sender, EventArgs e)
+        {
+            int intervalSeconds = (int)intervalSpinner.Value;
+            int intervalMilliseconds = intervalSeconds * 1000;
+            
+            pingTimer.Interval = intervalMilliseconds;
+            
+            // Save the new interval setting
+            SaveSettings();
         }
 
         private void SetupChart()
@@ -221,6 +269,7 @@ namespace PingMonitor
                 startStopButton.Text = "Stop Monitoring";
                 startStopButton.BackColor = Color.LightCoral;
                 hostTextBox.Enabled = false;
+                intervalSpinner.Enabled = false;
                 
                 // Clear previous data
                 statusHistory.Clear();
@@ -236,6 +285,7 @@ namespace PingMonitor
                 startStopButton.Text = "Start Monitoring";
                 startStopButton.BackColor = Color.LightGreen;
                 hostTextBox.Enabled = true;
+                intervalSpinner.Enabled = true;
                 pingTimer.Stop();
                 statusLabel.Text = "Status: Monitoring stopped";
             }
@@ -319,8 +369,9 @@ namespace PingMonitor
             pingTimer?.Stop();
             pingTimer?.Dispose();
             
-            // Save current target host if it's been changed
-            if (!string.IsNullOrEmpty(hostTextBox.Text.Trim()) && hostTextBox.Text.Trim() != targetHost)
+            // Save current settings if they've been changed
+            if (!string.IsNullOrEmpty(hostTextBox.Text.Trim()) && 
+                (hostTextBox.Text.Trim() != targetHost || intervalSpinner.Value != 10))
             {
                 targetHost = hostTextBox.Text.Trim();
                 SaveSettings();

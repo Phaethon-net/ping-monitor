@@ -29,6 +29,25 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "Build Distribution Executable",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"publish",
+				"-c",
+				"Release",
+				"-r",
+				"win-x64",
+				"--self-contained",
+				"true",
+				"/p:PublishSingleFile=true",
+				"/p:PublishTrimmed=true"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
