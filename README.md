@@ -4,11 +4,14 @@ A lightweight Windows application that monitors network connectivity by pinging 
 
 ## Features
 
-- Real-time ping monitoring with 10-second intervals
+- Real-time ping monitoring with adjustable intervals (1-100 seconds)
 - Visual bar chart display showing online/offline status
 - Tracks downtime duration and recovery times
+- **Audible alarms** for status changes with mute control
+- **Sound notifications**: Rising tone when coming online, warning tone when going offline
 - No installation required - single executable file
 - Shows 0% or 100% packet loss status
+- Persistent settings (remembers IP, interval, and mute preference)
 
 ## Requirements
 

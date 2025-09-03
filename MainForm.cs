@@ -5,6 +5,7 @@ using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Media;
 
 namespace PingMonitor
 {
@@ -23,7 +24,9 @@ namespace PingMonitor
         private Label lastCheckLabel;
         private Button startStopButton;
         private NumericUpDown intervalSpinner;
+        private Button muteButton;
         private bool isMonitoring = false;
+        private bool isMuted = false;
         private string settingsFilePath;
 
         public MainForm()
@@ -57,6 +60,14 @@ namespace PingMonitor
                             pingTimer.Interval = savedInterval * 1000;
                         }
                     }
+                    
+                    // Load mute setting (default to false if not found)
+                    if (lines.Length > 2 && bool.TryParse(lines[2].Trim(), out bool savedMute))
+                    {
+                        isMuted = savedMute;
+                        muteButton.Text = isMuted ? "🔇 Muted" : "🔊 Sound";
+                        muteButton.BackColor = isMuted ? Color.LightGray : Color.LightBlue;
+                    }
                 }
             }
             catch
@@ -78,7 +89,8 @@ namespace PingMonitor
                 string[] settings = new string[]
                 {
                     targetHost,
-                    intervalSpinner.Value.ToString()
+                    intervalSpinner.Value.ToString(),
+                    isMuted.ToString()
                 };
                 
                 File.WriteAllLines(settingsFilePath, settings);
@@ -92,7 +104,7 @@ namespace PingMonitor
         private void InitializeComponent()
         {
             this.Text = "Network Ping Monitor";
-            this.Size = new Size(800, 600);
+            this.Size = new Size(720, 600); // Increased width for mute button
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -145,6 +157,18 @@ namespace PingMonitor
             startStopButton.Click += StartStopButton_Click;
             this.Controls.Add(startStopButton);
 
+            // Mute button
+            muteButton = new Button
+            {
+                Text = "🔊 Sound",
+                Location = new Point(615, 10),
+                Size = new Size(80, 30),
+                BackColor = Color.LightBlue,
+                Font = new Font("Arial", 9)
+            };
+            muteButton.Click += MuteButton_Click;
+            this.Controls.Add(muteButton);
+
             // Status labels
             statusLabel = new Label
             {
@@ -175,7 +199,7 @@ namespace PingMonitor
             statusChart = new Panel
             {
                 Location = new Point(10, 130),
-                Size = new Size(760, 420),
+                Size = new Size(680, 420), // Adjusted for new form width
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle
             };
@@ -188,6 +212,46 @@ namespace PingMonitor
                 Interval = 10000 // Default 10 seconds, will be updated by spinner
             };
             pingTimer.Tick += async (s, e) => await PingHost();
+        }
+
+        private void MuteButton_Click(object sender, EventArgs e)
+        {
+            isMuted = !isMuted;
+            muteButton.Text = isMuted ? "🔇 Muted" : "🔊 Sound";
+            muteButton.BackColor = isMuted ? Color.LightGray : Color.LightBlue;
+            
+            // Save mute setting
+            SaveSettings();
+        }
+
+        private void PlayConnectedSound()
+        {
+            if (isMuted) return;
+            
+            try
+            {
+                // Play system sound for connection restored (ascending tone)
+                SystemSounds.Asterisk.Play();
+            }
+            catch
+            {
+                // If system sound fails, continue silently
+            }
+        }
+
+        private void PlayDisconnectedSound()
+        {
+            if (isMuted) return;
+            
+            try
+            {
+                // Play system sound for connection lost (warning tone)
+                SystemSounds.Exclamation.Play();
+            }
+            catch
+            {
+                // If system sound fails, continue silently
+            }
         }
 
         private void IntervalSpinner_ValueChanged(object sender, EventArgs e)
@@ -317,6 +381,7 @@ namespace PingMonitor
                     {
                         // Just went offline
                         lastOfflineTime = currentTime;
+                        PlayDisconnectedSound(); // Play descending alarm
                     }
                     else if (currentlyOnline && !isOnline)
                     {
@@ -326,6 +391,7 @@ namespace PingMonitor
                             totalDowntime += currentTime - lastOfflineTime.Value;
                             lastOfflineTime = null;
                         }
+                        PlayConnectedSound(); // Play rising tone
                     }
                     else if (!currentlyOnline && lastOfflineTime.HasValue)
                     {
