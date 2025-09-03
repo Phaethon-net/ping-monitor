@@ -2,21 +2,24 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- Single-file self‑contained publish (can override with /p:SelfContained=false) -->
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <PublishTrimmed>true</PublishTrimmed>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Trimming WinForms apps is risky due to reflection; disabled by default -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  <!-- Limit satellite resource languages to English only to reduce size -->
+  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  <!-- Disable ReadyToRun to reduce single-file size (slightly slower first startup) -->
+  <PublishReadyToRun>false</PublishReadyToRun>
     <AssemblyName>PingMonitor</AssemblyName>
     <RootNamespace>PingMonitor</RootNamespace>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <DebuggerSupport>false</DebuggerSupport>
-    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
-    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
